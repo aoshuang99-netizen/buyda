@@ -1,7 +1,7 @@
 {
   "name": "ai-selection-extension",
-  "version": "1.0.0",
-  "description": "AI驱动的跨境电商选品工具，帮助卖家快速发现高利润产品，智能匹配优质货源",
+  "version": "2.1.0",
+  "description": "Buyda 个性化选品智能体 v2.1 - 基于选品策略白皮书的完整工具包",
   "main": "index.js",
   "scripts": {
     "dev": "vite",

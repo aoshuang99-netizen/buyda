@@ -9,6 +9,11 @@ import {
   type UserProfile,
 } from '../utils/aiApi';
 import { fetchKeepaViaBackground } from '../utils/keepaApi';
+import { ScoringTab } from '../components/ScoringTab';
+import { MarketAnalysisTab } from '../components/MarketAnalysisTab';
+import { FunnelDashboard, type FunnelProduct } from '../components/FunnelDashboard';
+import { ProductComparisonMatrix, type ComparisonProduct } from '../components/ProductComparisonMatrix';
+import { ToolsTab } from '../components/ToolsTab';
 
 const PriceChart = lazy(() => import('../components/PriceChart'));
 type GenerateFn = typeof import('../components/PriceChart')['generateMockPriceHistory'];
@@ -47,7 +52,7 @@ interface ProfitCalc {
   adFee: string;
 }
 
-type TabType = 'analyze' | 'profit' | 'recommend' | 'watchlist' | 'settings';
+type TabType = 'analyze' | 'profit' | 'scoring' | 'market' | 'funnel' | 'comparison' | 'tools' | 'recommend' | 'watchlist' | 'settings';
 
 // ─── 工具函数 ───────────────────────────────────────────
 const getPotentialColor = (level: string) => {
@@ -312,6 +317,11 @@ const App: React.FC = () => {
   const tabs: { key: TabType; icon: string; label: string }[] = [
     { key: 'analyze', icon: '🔍', label: '分析' },
     { key: 'profit', icon: '💰', label: '利润' },
+    { key: 'scoring', icon: '📊', label: '评分' },
+    { key: 'market', icon: '📈', label: '市场' },
+    { key: 'funnel', icon: '🎯', label: '漏斗' },
+    { key: 'comparison', icon: '🔄', label: '对比' },
+    { key: 'tools', icon: '🛠️', label: '工具' },
     { key: 'recommend', icon: '🤖', label: 'AI推荐' },
     { key: 'watchlist', icon: '📋', label: `监控(${savedCount})` },
     { key: 'settings', icon: '⚙️', label: '设置' },
@@ -531,6 +541,41 @@ const App: React.FC = () => {
               </>
             )}
           </div>
+        )}
+
+        {/* ── 产品评分 Tab ── */}
+        {activeTab === 'scoring' && (
+          <ScoringTab productData={productData} />
+        )}
+
+        {/* ── 市场分析 Tab ── */}
+        {activeTab === 'market' && (
+          <MarketAnalysisTab productData={productData} />
+        )}
+
+        {/* ── 选品漏斗 Tab ── */}
+        {activeTab === 'funnel' && (
+          <FunnelDashboard
+            products={[]}
+            onProductAdd={() => {}}
+            onProductUpdate={() => {}}
+            onProductDelete={() => {}}
+          />
+        )}
+
+        {/* ── 产品对比 Tab ── */}
+        {activeTab === 'comparison' && (
+          <ProductComparisonMatrix
+            products={[]}
+            onProductToggle={() => {}}
+            onProductRemove={() => {}}
+            selectedProducts={[]}
+          />
+        )}
+
+        {/* ── 工具箱 Tab ── */}
+        {activeTab === 'tools' && (
+          <ToolsTab productData={productData} />
         )}
 
         {/* ── 利润计算 Tab ── */}

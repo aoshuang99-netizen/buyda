@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Buyda个性化选品智能体",
-  "version": "1.1.0",
-  "description": "AI驱动跨境选品工具：价格趋势图、AI深度分析、1688货源匹配、利润测算",
+  "version": "2.1.0",
+  "description": "Buyda v2.1 - 基于选品策略白皮书的完整工具包：评分、漏斗、对比、导出、广告测试矩阵",
   "permissions": [
     "activeTab",
     "storage",
