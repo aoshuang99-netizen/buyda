@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && cp src/content/amazon-vanilla.js dist/amazon-content.js",
+    "build": "tsc && vite build && cp src/content/amazon-vanilla.js dist/amazon-content.js && cp src/content/1688-matching.js dist/1688-content.js",
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -20,6 +20,7 @@
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {
+    "echarts": "^6.0.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },

@@ -1,17 +1,21 @@
 {
   "manifest_version": 3,
   "name": "Buyda个性化选品智能体",
-  "version": "1.0.0",
-  "description": "AI驱动的跨境电商选品工具，帮助卖家快速发现高利润产品，智能匹配优质货源",
+  "version": "1.1.0",
+  "description": "AI驱动跨境选品工具：价格趋势图、AI深度分析、1688货源匹配、利润测算",
   "permissions": [
     "activeTab",
     "storage",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
     "*://*.amazon.com/*",
     "*://*.amazon.cn/*",
-    "*://*.1688.com/*"
+    "*://*.1688.com/*",
+    "*://api.keepa.com/*",
+    "*://api.openai.com/*",
+    "*://api.anthropic.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
