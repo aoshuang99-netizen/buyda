@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Script 注入测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #1d4ed8;
+            font-size: 18px;
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: all 0.2s;
+        }
+        .button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        .button.secondary {
+            background: #6b7280;
+        }
+        .button.secondary:hover {
+            background: #4b5563;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        .code {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        .step-number {
+            background: #3b82f6;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Content Script 注入测试</h1>
+        
+        <div class="section">
+            <h2>📋 测试步骤</h2>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>
+                    <strong>检查插件是否加载</strong>
+                    <p>点击下方按钮检查插件是否正确加载</p>
+                    <button class="button" onclick="checkExtension()">检查插件状态</button>
+                    <div id="extension-status"></div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>
+                    <strong>测试 Content Script 消息</strong>
+                    <p>向 content script 发送测试消息，验证是否响应</p>
+                    <button class="button" onclick="testMessage()">发送测试消息</button>
+                    <div id="message-status"></div>
+                </div>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>
+                    <strong>手动注入 Content Script</strong>
+                    <p>如果 content script 未自动注入，手动加载它</p>
+                    <button class="button secondary" onclick="injectScript()">手动注入 Script</button>
+                    <div id="inject-status"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 调试信息</h2>
+            <div id="debug-info" class="code">// 点击测试按钮后，调试信息将显示在这里</div>
+        </div>
+
+        <div class="section">
+            <h2>❓ 故障排除</h2>
+            <ul>
+                <li>如果插件未加载：刷新 <code>chrome://extensions/</code> 页面</li>
+                <li>如果 content script 未注入：关闭所有 Amazon 标签页，重新打开</li>
+                <li>如果仍然失败：检查浏览器控制台（F12）的错误信息</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const debugLog = [];
+        
+        function log(message, type = 'info') {
+            debugLog.push({ time: new Date().toLocaleTimeString(), message, type });
+            updateDebugInfo();
+        }
+
+        function updateDebugInfo() {
+            const debugDiv = document.getElementById('debug-info');
+            debugDiv.innerHTML = debugLog.map(log => 
+                `[${log.time}] [${log.type.toUpperCase()}] ${log.message}`
+            ).join('\n');
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function checkExtension() {
+            log('检查插件状态...');
+            
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                chrome.runtime.sendMessage(
+                    { type: 'PING' },
+                    (response) => {
+                        if (chrome.runtime.lastError) {
+                            showStatus('extension-status', 
+                                `❌ 插件通信失败: ${chrome.runtime.lastError.message}`, 
+                                'error');
+                            log(`插件通信失败: ${chrome.runtime.lastError.message}`, 'error');
+                        } else if (response) {
+                            showStatus('extension-status', 
+                                '✅ 插件运行正常，可以通信', 
+                                'success');
+                            log('插件运行正常，响应:', 'success');
+                            log(JSON.stringify(response), 'info');
+                        } else {
+                            showStatus('extension-status', 
+                                '⚠️ 插件已加载但未响应', 
+                                'info');
+                            log('插件已加载但未响应', 'warning');
+                        }
+                    }
+                );
+            } else {
+                showStatus('extension-status', 
+                    '❌ Chrome API 不可用，请确保在 Chrome 浏览器中运行', 
+                    'error');
+                log('Chrome API 不可用', 'error');
+            }
+        }
+
+        function testMessage() {
+            log('发送测试消息...');
+            
+            // 发送消息到所有 content scripts
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                if (tabs[0]?.id) {
+                    chrome.tabs.sendMessage(
+                        tabs[0].id,
+                        { type: 'GET_PAGE_DATA' },
+                        (response) => {
+                            if (chrome.runtime.lastError) {
+                                showStatus('message-status', 
+                                    `❌ 消息发送失败: ${chrome.runtime.lastError.message}`, 
+                                    'error');
+                                log(`消息发送失败: ${chrome.runtime.lastError.message}`, 'error');
+                                
+                                // 提供解决方案
+                                const suggestions = document.createElement('div');
+                                suggestions.innerHTML = `
+                                    <div class="status info" style="margin-top: 10px;">
+                                        💡 解决方案：Content Script 未注入到当前页面<br>
+                                        <strong>请执行以下操作：</strong>
+                                        <ol style="margin: 10px 0 0 20px;">
+                                            <li>关闭当前页面</li>
+                                            <li>打开一个新的 Amazon 产品页面</li>
+                                            <li>或者在当前页面刷新</li>
+                                        </ol>
+                                    </div>
+                                `;
+                                document.getElementById('message-status').appendChild(suggestions);
+                            } else if (response?.success) {
+                                showStatus('message-status', 
+                                    '✅ Content Script 响应正常！', 
+                                    'success');
+                                log('Content Script 响应成功', 'success');
+                                log(`返回数据: ${JSON.stringify(response.data).substring(0, 100)}...`, 'info');
+                            } else {
+                                showStatus('message-status', 
+                                    '⚠️ Content Script 返回了无效响应', 
+                                    'info');
+                                log('Content Script 返回无效响应', 'warning');
+                            }
+                        }
+                    );
+                }
+            });
+        }
+
+        function injectScript() {
+            log('尝试手动注入 content script...');
+            
+            // 创建 script 元素加载 amazon-content.js
+            const script = document.createElement('script');
+            script.src = chrome.runtime.getURL('amazon-content.js');
+            script.onload = () => {
+                showStatus('inject-status', '✅ Script 加载成功', 'success');
+                log('Script 加载成功', 'success');
+            };
+            script.onerror = () => {
+                showStatus('inject-status', 
+                    '❌ Script 加载失败（这可能在普通页面无法工作）', 
+                    'error');
+                log('Script 加载失败', 'error');
+            };
+            document.body.appendChild(script);
+        }
+
+        // 页面加载时显示当前 URL 信息
+        log(`当前页面 URL: ${window.location.href}`, 'info');
+        log(`是否在 Amazon 页面: ${window.location.href.includes('amazon')}`, 'info');
+    </script>
+</body>
+</html>

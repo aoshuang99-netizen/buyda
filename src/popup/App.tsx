@@ -92,7 +92,8 @@ const App: React.FC = () => {
   };
 
   const isAmazonPage = currentUrl.includes('amazon.com') || currentUrl.includes('amazon.cn');
-  const asinFromUrl = currentUrl.match(/\/([A-Z0-9]{10})(?:\/|\?|$)/)?.[1] || '';
+  const asinMatch = currentUrl.match(/\/dp\/([A-Z0-9]{10})/i) || currentUrl.match(/\/([A-Z0-9]{10})(?:\/|\?|$)/);
+  const asinFromUrl = asinMatch?.[1] || '';
 
   const handleAnalyze = useCallback(async () => {
     if (!asinFromUrl) {
@@ -102,53 +103,69 @@ const App: React.FC = () => {
     setLoading(true);
 
     try {
-      // 请求 content script 提取真实数据
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab?.id) {
-        chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_DATA' }, (response) => {
-          if (response?.success && response?.data) {
-            const data = response.data;
-            setProductData({
-              asin: data.asin,
-              title: data.title,
-              price: data.price,
-              originalPrice: data.price * 1.2, // 假设原价
-              rank: data.rank,
-              rating: data.rating,
-              reviews: data.reviewCount,
-              imageUrl: data.imageUrl,
-              category: data.category,
-              url: currentUrl,
-            });
-          }
+      if (!tab?.id) return;
+
+      // 尝试注入 content script（如果未注入）
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          files: ['amazon-content.js']
         });
+      } catch (e) {
+        // 脚本可能已经注入，忽略错误
+        console.log('Script may already be injected:', e);
       }
+
+      // 等待一下让脚本初始化
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // 发送消息获取数据
+      chrome.tabs.sendMessage(tab.id, { type: 'GET_PAGE_DATA' }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error('消息发送失败:', chrome.runtime.lastError);
+          alert('无法与页面通信，请刷新页面后重试');
+          setLoading(false);
+          return;
+        }
+
+        if (response?.success && response?.data) {
+          const data = response.data;
+          setProductData({
+            asin: data.asin,
+            title: data.title,
+            price: data.price,
+            originalPrice: data.price * 1.2,
+            rank: data.rank,
+            rating: data.rating,
+            reviews: data.reviewCount,
+            imageUrl: data.imageUrl,
+            category: data.category,
+            url: currentUrl,
+          });
+          setLoading(false);
+        } else {
+          setProductData({
+            asin: asinFromUrl,
+            title: '无法获取产品标题',
+            price: 0,
+            originalPrice: 0,
+            rank: 0,
+            rating: 0,
+            reviews: 0,
+            imageUrl: '',
+            category: '',
+            url: currentUrl,
+          });
+          setLoading(false);
+        }
+      });
     } catch (error) {
       console.error('获取产品数据失败:', error);
       alert('获取产品数据失败，请刷新页面后重试');
+      setLoading(false);
     }
-
-    // 2秒后如果没有获取到数据，使用默认值
-    setTimeout(() => {
-      if (loading) {
-        setProductData({
-          asin: asinFromUrl,
-          title: '无法获取产品标题',
-          price: 0,
-          originalPrice: 0,
-          rank: 0,
-          rating: 0,
-          reviews: 0,
-          imageUrl: '',
-          category: '',
-          url: currentUrl,
-        });
-        setLoading(false);
-      }
-    }, 2000);
-
-    setTimeout(() => setLoading(false), 1500);
-  }, [asinFromUrl, currentUrl, loading]);
+  }, [asinFromUrl, currentUrl]);
 
   const calcProfit = () => {
     if (!productData) return;

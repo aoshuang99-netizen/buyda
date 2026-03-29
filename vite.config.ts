@@ -9,7 +9,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         popup: resolve(__dirname, 'popup.html'),
-        'amazon-content': resolve(__dirname, 'src/content/amazon.tsx'),
+        '1688-content': resolve(__dirname, 'src/content/1688.tsx'),
         'service-worker': resolve(__dirname, 'src/background/service-worker.ts')
       },
       output: {

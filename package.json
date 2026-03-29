@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && cp src/content/amazon-vanilla.js dist/amazon-content.js",
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
