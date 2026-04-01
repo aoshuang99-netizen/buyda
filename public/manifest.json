@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Buyda个性化选品智能体",
-  "version": "2.1.0",
-  "description": "Buyda v2.1 - 基于选品策略白皮书的完整工具包：评分、漏斗、对比、导出、广告测试矩阵",
+  "version": "2.3.0",
+  "description": "Buyda v2.3 - 决策指挥中心+双层分组导航+Sophos企业级UI：AI选品总结、风险拦截雷达、行动剧本",
   "permissions": [
     "activeTab",
     "storage",

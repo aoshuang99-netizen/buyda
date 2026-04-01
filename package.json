@@ -1,7 +1,7 @@
 {
   "name": "ai-selection-extension",
-  "version": "2.1.0",
-  "description": "Buyda 个性化选品智能体 v2.1 - 基于选品策略白皮书的完整工具包",
+  "version": "2.3.0",
+  "description": "Buyda 个性化选品智能体 v2.3 - 决策指挥中心 + Sophos风格企业级UI + 双层分组导航",
   "main": "index.js",
   "scripts": {
     "dev": "vite",

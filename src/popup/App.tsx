@@ -14,6 +14,9 @@ import { MarketAnalysisTab } from '../components/MarketAnalysisTab';
 import { FunnelDashboard, type FunnelProduct } from '../components/FunnelDashboard';
 import { ProductComparisonMatrix, type ComparisonProduct } from '../components/ProductComparisonMatrix';
 import { ToolsTab } from '../components/ToolsTab';
+import { AIAssistantTab } from '../components/AIAssistantTab';
+import { SupplyChainTab } from '../components/SupplyChainTab';
+import { CommandCenterTab } from '../components/CommandCenterTab';
 
 const PriceChart = lazy(() => import('../components/PriceChart'));
 type GenerateFn = typeof import('../components/PriceChart')['generateMockPriceHistory'];
@@ -52,7 +55,7 @@ interface ProfitCalc {
   adFee: string;
 }
 
-type TabType = 'analyze' | 'profit' | 'scoring' | 'market' | 'funnel' | 'comparison' | 'tools' | 'recommend' | 'watchlist' | 'settings';
+type TabType = 'dashboard' | 'analyze' | 'profit' | 'scoring' | 'market' | 'funnel' | 'comparison' | 'tools' | 'ai' | 'supply' | 'recommend' | 'watchlist' | 'settings';
 
 // ─── 工具函数 ───────────────────────────────────────────
 const getPotentialColor = (level: string) => {
@@ -73,7 +76,7 @@ const formatNumber = (n: number) => n.toLocaleString();
 const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabType>('analyze');
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [productData, setProductData] = useState<ProductData | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<AIProductAnalysis | null>(null);
   const [priceHistory, setPriceHistory] = useState<PricePoint[]>([]);
@@ -314,18 +317,45 @@ const App: React.FC = () => {
     alert('✅ 配置已保存');
   };
 
-  const tabs: { key: TabType; icon: string; label: string }[] = [
-    { key: 'analyze', icon: '🔍', label: '分析' },
-    { key: 'profit', icon: '💰', label: '利润' },
-    { key: 'scoring', icon: '📊', label: '评分' },
-    { key: 'market', icon: '📈', label: '市场' },
-    { key: 'funnel', icon: '🎯', label: '漏斗' },
-    { key: 'comparison', icon: '🔄', label: '对比' },
-    { key: 'tools', icon: '🛠️', label: '工具' },
-    { key: 'recommend', icon: '🤖', label: 'AI推荐' },
-    { key: 'watchlist', icon: '📋', label: `监控(${savedCount})` },
-    { key: 'settings', icon: '⚙️', label: '设置' },
+  // ─── 分组式双层导航 ──────────────────────────────────────
+  type NavGroup = { label: string; tabs: { key: TabType; icon: string; label: string }[] };
+  const navGroups: NavGroup[] = [
+    {
+      label: '核心',
+      tabs: [
+        { key: 'dashboard', icon: '🛡️', label: '指挥中心' },
+        { key: 'analyze',   icon: '🔍', label: '分析'     },
+        { key: 'profit',    icon: '💰', label: '利润'     },
+      ],
+    },
+    {
+      label: '决策',
+      tabs: [
+        { key: 'scoring',    icon: '📊', label: '评分'   },
+        { key: 'market',     icon: '📈', label: '市场'   },
+        { key: 'funnel',     icon: '🎯', label: '漏斗'   },
+        { key: 'comparison', icon: '🔄', label: '对比'   },
+      ],
+    },
+    {
+      label: 'AI',
+      tabs: [
+        { key: 'recommend', icon: '🤖', label: 'AI推荐' },
+        { key: 'ai',        icon: '📚', label: 'AI助手' },
+        { key: 'supply',    icon: '📦', label: '供应链' },
+      ],
+    },
+    {
+      label: '工具',
+      tabs: [
+        { key: 'tools',     icon: '🛠️', label: '工具'            },
+        { key: 'watchlist', icon: '📋', label: `监控(${savedCount})` },
+        { key: 'settings',  icon: '⚙️', label: '设置'            },
+      ],
+    },
   ];
+  const activeGroup = navGroups.find(g => g.tabs.some(t => t.key === activeTab)) || navGroups[0];
+  const tabs = activeGroup.tabs;
 
   const verdictColor = (v: string) => {
     if (v === '强烈推荐') return { bg: '#f0fdf4', color: '#16a34a', border: '#86efac' };
@@ -335,41 +365,72 @@ const App: React.FC = () => {
   };
 
   return (
-    <div style={{ width: 360, minHeight: 520, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: '#F8FAFC' }}>
-      {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)', padding: '12px 16px', color: 'white' }}>
+    <div style={{ width: 360, minHeight: 520, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', background: '#F0F4F8' }}>
+      {/* Header — Sophos 风格深色顶栏 */}
+      <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)', padding: '10px 14px', color: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 24 }}>🤖</span>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(59,130,246,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800 }}>B</div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 15 }}>Buyda 选品智能体</div>
-            <div style={{ fontSize: 11, opacity: 0.8 }}>AI驱动 · 价格趋势 · 货源匹配</div>
+            <div style={{ fontWeight: 700, fontSize: 14, letterSpacing: 0.3 }}>Buyda Intelligence</div>
+            <div style={{ fontSize: 10, opacity: 0.65, marginTop: 1 }}>选品决策 · 风险拦截 · 数据驱动</div>
           </div>
-          {isAmazonPage && asinFromUrl && (
-            <div style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.2)', borderRadius: 12, padding: '2px 8px', fontSize: 11 }}>
-              {asinFromUrl}
-            </div>
-          )}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+            {isAmazonPage && asinFromUrl && (
+              <div style={{ background: 'rgba(59,130,246,0.3)', border: '1px solid rgba(59,130,246,0.5)', borderRadius: 4, padding: '2px 7px', fontSize: 10, fontFamily: 'monospace' }}>
+                {asinFromUrl}
+              </div>
+            )}
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: isAmazonPage ? '#22c55e' : '#64748b' }} title={isAmazonPage ? '已连接' : '未连接'} />
+          </div>
         </div>
       </div>
 
-      {/* Tab Bar */}
+      {/* 一级导航：分组 Tab */}
+      <div style={{ display: 'flex', background: '#1e293b', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        {navGroups.map(g => {
+          const isActive = activeGroup.label === g.label;
+          return (
+            <button key={g.label} onClick={() => setActiveTab(g.tabs[0].key)} style={{
+              flex: 1, padding: '7px 4px', fontSize: 10, border: 'none', cursor: 'pointer',
+              background: isActive ? 'rgba(59,130,246,0.25)' : 'transparent',
+              color: isActive ? '#93c5fd' : '#94a3b8',
+              borderBottom: isActive ? '2px solid #3b82f6' : '2px solid transparent',
+              fontWeight: isActive ? 700 : 400, letterSpacing: 0.3, transition: 'all 0.15s',
+            }}>
+              {g.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 二级导航：当前分组的子 Tab */}
       <div style={{ display: 'flex', background: 'white', borderBottom: '1px solid #e2e8f0' }}>
         {tabs.map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)} style={{
-            flex: 1, padding: '8px 2px', fontSize: 11, border: 'none', cursor: 'pointer',
+            flex: 1, padding: '7px 2px', fontSize: 10, border: 'none', cursor: 'pointer',
             background: activeTab === t.key ? '#eff6ff' : 'white',
             color: activeTab === t.key ? '#1d4ed8' : '#64748b',
             borderBottom: activeTab === t.key ? '2px solid #3b82f6' : '2px solid transparent',
-            fontWeight: activeTab === t.key ? 600 : 400,
+            fontWeight: activeTab === t.key ? 600 : 400, transition: 'all 0.15s',
           }}>
-            <div>{t.icon}</div>
-            <div style={{ marginTop: 1 }}>{t.label}</div>
+            <div style={{ fontSize: 14 }}>{t.icon}</div>
+            <div style={{ marginTop: 2 }}>{t.label}</div>
           </button>
         ))}
       </div>
 
       {/* Content */}
       <div style={{ padding: 14 }}>
+
+        {/* ── 指挥中心 Tab ── */}
+        {activeTab === 'dashboard' && (
+          <CommandCenterTab 
+            productData={productData} 
+            aiAnalysis={aiAnalysis} 
+            profitResult={profitResult} 
+            setActiveTab={setActiveTab} 
+          />
+        )}
 
         {/* ── 分析 Tab ── */}
         {activeTab === 'analyze' && (
@@ -576,6 +637,16 @@ const App: React.FC = () => {
         {/* ── 工具箱 Tab ── */}
         {activeTab === 'tools' && (
           <ToolsTab productData={productData} />
+        )}
+
+        {/* ── AI助手 Tab ── */}
+        {activeTab === 'ai' && (
+          <AIAssistantTab />
+        )}
+
+        {/* ── 供应链 Tab ── */}
+        {activeTab === 'supply' && (
+          <SupplyChainTab />
         )}
 
         {/* ── 利润计算 Tab ── */}
